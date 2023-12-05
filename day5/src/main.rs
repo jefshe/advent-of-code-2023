@@ -1,49 +1,26 @@
 #![feature(let_chains)]
 use itertools::Itertools;
-use std::cmp::{min,max};
+use std::cmp::min;
 use std::collections::VecDeque;
 
 use std::{collections::HashMap, ops::Range};
 
-const INPUT: [&str; 33]  = [
-    "seeds: 79 14 55 13",
-    "",
-    "seed-to-soil map:",
-    "50 98 2",
-    "52 50 48",
-    "",
-    "soil-to-fertilizer map:",
-    "0 15 37",
-    "37 52 2",
-    "39 0 15",
-    "",
-    "fertilizer-to-water map:",
-    "49 53 8",
-    "0 11 42",
-    "42 0 7",
-    "57 7 4",
-    "",
-    "water-to-light map:",
-    "88 18 7",
-    "18 25 70",
-    "",
-    "light-to-temperature map:",
-    "45 77 23",
-    "81 45 19",
-    "68 64 13",
-    "",
-    "temperature-to-humidity map:",
-    "0 69 1",
-    "1 0 69",
-    "",
-    "humidity-to-location map:",
-    "60 56 37",
-    "56 93 4",
-];
-
 type Transformation = HashMap<Range<u64>, u64>;
 
 fn main() {
+
+   let (mut input, tfs) = parse_all();
+   for tf in tfs {
+    // sort input by ranges
+    let sorted_input: VecDeque<Range<u64>> = input.into_iter()
+        .sorted_by(|a,b| Ord::cmp(&a.start, &b.start))
+        .collect();
+    input = perform_tf_range(sorted_input, &tf);
+   }
+   println!("solution: {}", input.iter().map(|rng| rng.start).min().unwrap())
+}
+
+fn parse_all() -> (VecDeque<Range<u64>>, Vec<Transformation>) {
    let mut iter = BIG_INPUT.into_iter().peekable();
    let seeds = parse_seeds(iter.next().unwrap());
    iter.next(); // Skip empty line
@@ -54,16 +31,12 @@ fn main() {
     tfs.push(map);
    }
 
-   let mut input: VecDeque<Range<u64>> = seeds
+   let input: VecDeque<Range<u64>> = seeds
     .chunks(2)
     .map(|a| a[0]..a[0]+a[1])
-    .sorted_by(|a,b| Ord::cmp(&a.start, &b.start))
     .collect();
 
-   for tf in tfs {
-    input = perform_tf_range(input, &tf);
-   }
-   println!("lowest: {}", input[0].start)
+    return (input, tfs)
 }
 
 fn parse_seeds(line: &str) -> Vec<u64> {
@@ -99,22 +72,15 @@ fn perform_tf_range(mut a_vec: VecDeque<Range<u64>>, tf: &Transformation) -> Vec
                     a_vec.push_front(b.start..a.end);
                     b_vec.push_front(b);
                     output.push_back(a.start..b.start);
-                } else if a.end >= b.end {
+                } else {
                     if a.end > b.end {
                         a_vec.push_front(b.end..a.end)
-                    }
-                    let base = tf.get(b).unwrap().to_owned();
-                    let output_range = (base + (a.start - b.start))..(base + (b.end - b.start));
-                    output.push_back(output_range);
-                } else if a.end <= b.end {
-                    if b.end > a.end {
+                    } else if b.end > a.end {
                         b_vec.push_front(b)
                     }
                     let base = tf.get(b).unwrap().to_owned();
-                    let output_range = (base + (a.start - b.start)) ..(base + (a.end - b.start));
-                    output.push_back(output_range)
-                } else {
-                    panic!("uncovered case a: {a:?}, b: {b:?}")
+                    let output_range = (base + (a.start - b.start))..(base + (min(a.end, b.end) - b.start));
+                    output.push_back(output_range);
                 }
             },
             (Some(a), None) => {
@@ -123,35 +89,8 @@ fn perform_tf_range(mut a_vec: VecDeque<Range<u64>>, tf: &Transformation) -> Vec
             (None, _) => break
         }
     }
-    merge_ranges(output)
+    output
 }
-
-fn merge_ranges(a_vec: VecDeque<Range<u64>>) -> VecDeque<Range<u64>> {
-    let mut merged = VecDeque::new();
-    let mut queue: VecDeque<Range<u64>> = a_vec.into_iter()
-        .sorted_by(|a,b| Ord::cmp(&a.start, &b.start))
-        .collect();
-    while let Some(a) = queue.pop_front() {
-        match queue.pop_front() {
-            None => merged.push_back(a),
-            Some(next_a) if next_a.start >= a.end => {
-                merged.push_back(a);
-                queue.push_front(next_a);
-            },
-            Some(next_a) => {
-                queue.push_front(min(a.start, next_a.start)..max(a.end,next_a.end))
-            },
-        }
-    }
-    merged
-}
-
-fn check_for_overlap(input: &VecDeque<&Range<u64>>) {
-    for (a,b) in input.iter().tuple_windows() {
-        if a.end > b.start { panic!( "OVERLAPPING OUTPUTS FOUND {a:?} {b:?}") };
-    }
-}
-
 
 const BIG_INPUT: [&str; 207] = [
 "seeds: 104847962 3583832 1212568077 114894281 3890048781 333451605 1520059863 217361990 310308287 12785610 3492562455 292968049 1901414562 516150861 2474299950 152867148 3394639029 59690410 862612782 176128197",
