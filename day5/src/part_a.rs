@@ -1,8 +1,3 @@
-#![feature(let_chains)]
-use itertools::Itertools;
-use std::cmp::{min,max};
-use std::collections::VecDeque;
-
 use std::{collections::HashMap, ops::Range};
 
 const INPUT: [&str; 33]  = [
@@ -54,16 +49,8 @@ fn main() {
     tfs.push(map);
    }
 
-   let mut input: VecDeque<Range<u64>> = seeds
-    .chunks(2)
-    .map(|a| a[0]..a[0]+a[1])
-    .sorted_by(|a,b| Ord::cmp(&a.start, &b.start))
-    .collect();
-
-   for tf in tfs {
-    input = perform_tf_range(input, &tf);
-   }
-   println!("{input:?}")
+   let min = seeds.into_iter().map(|s| map_tf(s, &tfs)).min();
+   println!("{:?}", min)
 }
 
 fn parse_seeds(line: &str) -> Vec<u64> {
@@ -72,7 +59,7 @@ fn parse_seeds(line: &str) -> Vec<u64> {
 
 fn parse_transformation<'a>(iter: &mut impl Iterator<Item = &'a str>) -> Transformation {
     iter.next(); // skip title - we don't care
-    let mut map: Transformation = HashMap::new();
+    let mut map: HashMap<Range<u64>, u64> = HashMap::new();
     while let Some(line) = iter.next() && !line.trim().is_empty() {
         let row: Vec<u64> = line.split(" ").into_iter().map(|num| num.parse().unwrap()).collect();
         map.insert(row[1]..(row[1]+row[2]), row[0]);
@@ -80,69 +67,22 @@ fn parse_transformation<'a>(iter: &mut impl Iterator<Item = &'a str>) -> Transfo
     map
 }
 
-fn perform_tf_range(mut a_vec: VecDeque<Range<u64>>, tf: &Transformation) -> VecDeque<Range<u64>> {
-    let mut output: VecDeque<Range<u64>> = VecDeque::new();
-    let mut b_vec: VecDeque<&Range<u64>> = tf.keys()
-        .into_iter()
-        .sorted_by(|a,b| Ord::cmp(&a.start, &b.start))
-        .collect();
-    loop {
-        match(a_vec.pop_front(), b_vec.pop_front()) {
-            (Some(a), Some(b)) => {
-                if a.end <= b.start {
-                    b_vec.push_front(b); // place b back on the queue
-                    output.push_back(a.start..a.end);
-                } else if a.start >= b.end {
-                    // check the next b
-                    a_vec.push_front(a);
-                } else if a.start < b.start {
-                    a_vec.push_front(b.start..a.end);
-                    output.push_back(a.start..b.start);
-                } else if a.end >= b.end {
-                    if a.end > b.end {
-                        a_vec.push_front(b.end..a.end)
-                    }
-                    let base = tf.get(b).unwrap().to_owned();
-                    let output_range = (base + (a.start - b.start))..(base + (b.end - b.start));
-                    output.push_back(output_range);
-                } else if a.end <= b.end {
-                    if b.end > a.end {
-                        b_vec.push_front(b)
-                    }
-                    let base = tf.get(b).unwrap().to_owned();
-                    let output_range = (base + (a.start - b.start)) ..(base + (a.end - b.start));
-                    output.push_back(output_range)
-                } else {
-                    panic!("uncovered case a: {a:?}, b: {b:?}")
-                }
-            },
-            (Some(a), None) => {
-                output.push_back(a.start..a.end);
-            },
-            (None, _) => break
-        }
+fn map_tf(seed: u64, tfs: &[Transformation]) -> u64 {
+    let mut transformed = seed;
+    for tf  in tfs {
+        transformed = perform_tf(transformed, tf);
     }
-    merge_ranges(output)
+    transformed
 }
 
-fn merge_ranges(a_vec: VecDeque<Range<u64>>) -> VecDeque<Range<u64>> {
-    let mut merged = VecDeque::new();
-    let mut queue: VecDeque<Range<u64>> = a_vec.into_iter()
-        .sorted_by(|a,b| Ord::cmp(&a.start, &b.start))
-        .collect();
-    while let Some(a) = queue.pop_front() {
-        match queue.pop_front() {
-            None => merged.push_back(a),
-            Some(next_a) if next_a.start >= a.end => {
-                merged.push_back(a);
-                queue.push_front(next_a);
-            },
-            Some(next_a) => {
-                queue.push_front(min(a.start, next_a.start)..max(a.end,next_a.end))
-            },
-        }
+fn perform_tf(seed: u64, tf: &Transformation) -> u64 {
+    match tf.keys().into_iter().find(|rng| rng.contains(&seed)) {
+        Some(rng) => {
+            let base = tf.get(rng).unwrap().to_owned();
+            base + seed - rng.start
+        },
+        None => seed
     }
-    merged
 }
 
 
