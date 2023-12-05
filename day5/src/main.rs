@@ -1,4 +1,8 @@
-const INPUT: [&str; 33]= [
+#![feature(let_chains)]
+
+use std::{collections::HashMap, ops::Range};
+
+const INPUT: [&str; 33]  = [
     "seeds: 79 14 55 13",
     "",
     "seed-to-soil map:",
@@ -34,9 +38,56 @@ const INPUT: [&str; 33]= [
     "56 93 4",
 ];
 
+type Transformation = HashMap<Range<u64>, u64>;
+
 fn main() {
-    
+   let mut iter = BIG_INPUT.into_iter().peekable();
+   let seeds = parse_seeds(iter.next().unwrap());
+   iter.next(); // Skip empty line
+
+   let mut tfs: Vec<Transformation> = Vec::new();
+   while let Some(_) = iter.peek() {
+    let map = parse_transformation(&mut iter);
+    tfs.push(map);
+   }
+
+   let min = seeds.into_iter().map(|s| map_tf(s, &tfs)).min();
+   println!("{:?}", min)
 }
+
+fn parse_seeds(line: &str) -> Vec<u64> {
+    line.split(" ").into_iter().skip(1).map(|seed| seed.parse().unwrap() ).collect()
+}
+
+fn parse_transformation<'a>(iter: &mut impl Iterator<Item = &'a str>) -> Transformation {
+    iter.next(); // skip title - we don't care
+    let mut map: HashMap<Range<u64>, u64> = HashMap::new();
+    while let Some(line) = iter.next() && !line.trim().is_empty() {
+        let row: Vec<u64> = line.split(" ").into_iter().map(|num| num.parse().unwrap()).collect();
+        map.insert(row[1]..(row[1]+row[2]), row[0]);
+    }
+    map
+}
+
+fn map_tf(seed: u64, tfs: &[Transformation]) -> u64 {
+    let mut transformed = seed;
+    for tf  in tfs {
+        transformed = perform_tf(transformed, tf);
+    }
+    transformed
+}
+
+fn perform_tf(seed: u64, tf: &Transformation) -> u64 {
+    match tf.keys().into_iter().find(|rng| rng.contains(&seed)) {
+        Some(rng) => {
+            let base = tf.get(rng).unwrap().to_owned();
+            
+            base + seed - rng.start
+        },
+        None => seed
+    }
+}
+
 
 
 const BIG_INPUT: [&str; 207] = [
