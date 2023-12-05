@@ -63,7 +63,7 @@ fn main() {
    for tf in tfs {
     input = perform_tf_range(input, &tf);
    }
-   println!("{input:?}")
+   println!("lowest: {}", input[0].start)
 }
 
 fn parse_seeds(line: &str) -> Vec<u64> {
@@ -97,6 +97,7 @@ fn perform_tf_range(mut a_vec: VecDeque<Range<u64>>, tf: &Transformation) -> Vec
                     a_vec.push_front(a);
                 } else if a.start < b.start {
                     a_vec.push_front(b.start..a.end);
+                    b_vec.push_front(b);
                     output.push_back(a.start..b.start);
                 } else if a.end >= b.end {
                     if a.end > b.end {
@@ -145,6 +146,11 @@ fn merge_ranges(a_vec: VecDeque<Range<u64>>) -> VecDeque<Range<u64>> {
     merged
 }
 
+fn check_for_overlap(input: &VecDeque<&Range<u64>>) {
+    for (a,b) in input.iter().tuple_windows() {
+        if a.end > b.start { panic!( "OVERLAPPING OUTPUTS FOUND {a:?} {b:?}") };
+    }
+}
 
 
 const BIG_INPUT: [&str; 207] = [
