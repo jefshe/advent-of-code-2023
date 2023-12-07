@@ -15,7 +15,7 @@ pub enum HandType {
     FiveOfAKind,
 }
 
-const CARD_RANK:[char; 13] = ['A','K','Q','T','9','8','7','6','5','4','3','2', 'J'];
+const CARD_RANK:[char; 13] = ['A','K','Q','T','9','8','7','6','5','4','3','2','J'];
 fn rank_lookup() -> &'static HashMap<char, usize> {
     static LOOKUP: OnceLock<HashMap<char, usize>> = OnceLock::new();
     LOOKUP.get_or_init(|| {
@@ -48,23 +48,14 @@ impl Hand {
         for c in &self.cards {
             *count.entry(c).or_insert(0) += 1;
         }
-
-        let n_wild_cards = match count.remove_entry(&'J') {
-            None => 0,
-            Some((_,cnt)) => cnt
-        };
-
         let totals: Vec<u32> = count.into_values().sorted_by(|a,b| b.cmp(a)).collect();
-        let one_card_best_total = totals.get(0).unwrap_or(&0) + n_wild_cards;
-        let two_card_best_total = one_card_best_total + totals.get(1).unwrap_or(&0);
-
-        match (one_card_best_total, two_card_best_total) {
-            (5,_) => HandType::FiveOfAKind,
-            (4,_) => HandType::FourOfAKind,
-            (_, 5) => HandType::FullHouse,
-            (3,_) => HandType::ThreeOfAKind,
-            (_,4) => HandType::TwoPair,
-            (2,_) => HandType::Pair,
+        match totals.as_slice() {
+            [5, ..] => HandType::FiveOfAKind,
+            [4, ..] => HandType::FourOfAKind,
+            [3, 2, ..] => HandType::FullHouse,
+            [3, ..] => HandType::ThreeOfAKind,
+            [2, 2, ..] => HandType::TwoPair,
+            [2, ..] => HandType::Pair,
             _ => HandType::HighCard
         }
     }
