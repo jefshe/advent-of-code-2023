@@ -38,7 +38,6 @@ impl Hand {
         Hand {
             cards: hand
             .chars().into_iter()
-            // .sorted_by_key(|a| &rank_lookup()[a])
             .collect()
         }
     }

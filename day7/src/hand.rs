@@ -1,6 +1,5 @@
 use std::{collections::btree_map::BTreeMap, cmp::Ordering};
-
-use std::{collections::HashMap};
+use std::collections::HashMap;
 use std::sync::OnceLock;
 use itertools::Itertools;
 
@@ -38,7 +37,6 @@ impl Hand {
         Hand {
             cards: hand
             .chars().into_iter()
-            // .sorted_by_key(|a| &rank_lookup()[a])
             .collect()
         }
     }
@@ -82,7 +80,6 @@ impl Ord for Hand {
                 return card_cmp
             }
         }
-
         return Ordering::Equal;
     }
 }
