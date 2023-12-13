@@ -1,0 +1,11 @@
+{
+  "binaries": [
+    {
+      "name": "day8",
+      "src_path": "/Users/jeshen/repos/advent-of-code-2023/day9/src/main.rs"
+    }
+  ],
+  "examples": [],
+  "integration_tests": [],
+  "unit_tests": []
+}
