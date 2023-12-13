@@ -1,5 +1,3 @@
-use std::cmp::max;
-
 pub type Coord = (usize, usize);
 #[derive(Debug)]
 pub struct Rectangle {
@@ -27,7 +25,7 @@ impl Rectangle {
     pub fn is_inside(&self, coord: &Coord) -> bool {
         let x = coord.0 as i64;
         let y = coord.1 as i64;
-        x >= self.x && y >= self.y && x <= (self.x + self.width as i64) && y <= (self.y + self.height as i64)
+        x >= self.x && y >= self.y && x < (self.x + self.width as i64) && y < (self.y + self.height as i64)
     }
 
 }
