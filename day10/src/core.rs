@@ -40,15 +40,17 @@ impl Pipe {
     pub fn connect_up<'a>(&self, map: &'a Array2D<Pipe>) -> Node {
         let (x,y) = self.coords;
         let mut connections: HashSet<Coord> = HashSet::new();
+        println!("{:?}", self.coords);
         for dir in self.pipe_type.iter() {
             let pipe = match dir {
-                N => check(map.get(x, y+1), S),
-                S => check(map.get(x, y-1), N),
+                N => check(map.get(x, y-1), S),
+                S => check(map.get(x, y+1), N),
                 E => check(map.get(x+1, y), W),
                 W => check(map.get(x-1, y), E),
             };
 
             if let Some(p) = pipe {
+                println!("-> {:?}", p);
                 connections.insert(p);
             }
         }
