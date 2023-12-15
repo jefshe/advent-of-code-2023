@@ -1,16 +1,16 @@
 pub const INPUT: &str = 
 ".....
-.F-7.
+.S-7.
 .|.|.
 .L-J.
 .....";
 
-pub const SAME_INPUT: &str = 
-"-L|F7
-7S-7|
-L|7||
--L-J|
-L|-JF";
+pub const MEDIUM_INPUT: &str = 
+"..F7.
+.FJ|.
+SJ.L7
+|F--J
+LJ...";
 
 pub const BIG_INPUT: &str = 
 "FF-7F-7.|FJ7L-7-.FL-F7|-7FFF77J.|7F--J-FF7-L..-7FF-LF7F|-F|7-L-FLJ7-FF-JFF-7-7.-J-.--7.-F---FJ-|..-J7.|J-77-F7---77FFLJ7.LFJF7.FL|-J--7-LJ-|

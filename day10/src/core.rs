@@ -16,6 +16,7 @@ pub enum Dir {
 pub struct Pipe {
     pub coords: Coord,
     pub pipe_type: HashSet<Dir>,
+    pub char: char
 }
 
 impl Pipe {
@@ -34,30 +35,31 @@ impl Pipe {
         Pipe {
             pipe_type: pipe_type.into_iter().collect(),
             coords,
+            char: c
         }
     }
 
     pub fn connect_up<'a>(&self, map: &'a Array2D<Pipe>) -> Node {
         let (x,y) = self.coords;
         let mut connections: HashSet<Coord> = HashSet::new();
-        println!("{:?}", self.coords);
         for dir in self.pipe_type.iter() {
             let pipe = match dir {
-                N => check(map.get(x, y-1), S),
+                N if y > 0 => check(map.get(x, y-1), S),
                 S => check(map.get(x, y+1), N),
                 E => check(map.get(x+1, y), W),
-                W => check(map.get(x-1, y), E),
+                W if x > 0 => check(map.get(x-1, y), E),
+                _ => None
             };
 
             if let Some(p) = pipe {
-                println!("-> {:?}", p);
                 connections.insert(p);
             }
         }
 
         Node {
             coords: self.coords,
-            connections
+            connections,
+            pipe: map[self.coords].clone()
         }
     }
 }
@@ -72,5 +74,6 @@ fn check(pipe: Option<&Pipe>, connecting_dir: Dir) -> Option<Coord> {
 #[derive(Debug, Clone)]
 pub struct Node {
     pub coords: Coord,
-    pub connections: HashSet<Coord>
+    pub connections: HashSet<Coord>,
+    pub pipe: Pipe
 }
