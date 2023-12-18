@@ -15,7 +15,7 @@ fn main() {
             (status.chars().map(Status::new).collect_vec(), constraint.split(",").map(|c| c.parse().unwrap()).collect()))
         .collect();
     for (status, constraint) in parsed {
-        if let Some(combos) = find_combinations(&status, &constraint) {
+        if let Some(combos) = find_combinations(&status, &constraint, false) {
             println!("{status:?} : {combos}")
         }
     }

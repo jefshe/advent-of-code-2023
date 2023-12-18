@@ -1,6 +1,4 @@
-pub type Coord = (usize, usize);
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Status {
     Operational,
     Damaged,
