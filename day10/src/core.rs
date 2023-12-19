@@ -15,7 +15,7 @@ pub enum Dir {
 #[derive(Debug, Clone)]
 pub struct Pipe {
     pub coords: Coord,
-    pub pipe_type: HashSet<Dir>,
+    pub pipe_type: Vec<Dir>,
     pub char: char
 }
 
@@ -33,33 +33,30 @@ impl Pipe {
             _ => panic!("Unrecognized char {c}")
         };
         Pipe {
-            pipe_type: pipe_type.into_iter().collect(),
+            pipe_type,
             coords,
             char: c
         }
     }
 
-    pub fn connect_up<'a>(&self, map: &'a Array2D<Pipe>) -> Node {
-        let (x,y) = self.coords;
-        let mut connections: HashSet<Coord> = HashSet::new();
-        for dir in self.pipe_type.iter() {
-            let pipe = match dir {
-                N if y > 0 => check(map.get(x, y-1), S),
-                S => check(map.get(x, y+1), N),
-                E => check(map.get(x+1, y), W),
-                W if x > 0 => check(map.get(x-1, y), E),
-                _ => None
-            };
-
-            if let Some(p) = pipe {
-                connections.insert(p);
-            }
-        }
-
+    pub fn connect_up<'a>(&self, map: &'a Vec<Vec<Pipe>>) -> Node {
+        let connections: HashSet<Coord> = self.pipe_type.iter().flat_map(|dir| self.check_pipe(dir, map)).collect();
         Node {
             coords: self.coords,
             connections,
-            pipe: map[self.coords].clone()
+            pipe: map[self.coords.1][self.coords.0].clone()
+        }
+    }
+
+    fn check_pipe<'a, 'b>(self: &Self, dir: &'a Dir, map: &'b Vec<Vec<Pipe>>) -> Option<Coord> {
+        let (x,y) = self.coords;
+        // TODO: why is S connected
+        match dir {
+            N if y > 0 => check(map.get(y-1)?.get(x), S),
+            S => check(map.get(y+1)?.get(x), N),
+            E => check(map.get( y)?.get(x+1), W),
+            W if x > 0 => check(map.get(y)?.get(x-1), E),
+            _ => None
         }
     }
 }
