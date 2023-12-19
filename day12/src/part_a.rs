@@ -1,4 +1,20 @@
-pub fn find_combinations(springs: &[char], constraints: &[usize], in_streak: bool) -> Option<usize> {
+use itertools::Itertools;
+
+use crate::consts;
+
+pub fn part_a() {
+    let parsed: Vec<(Vec<char>, Vec<usize>)> = consts::BIG_INPUT.lines()
+        .map(|l| l.split_whitespace().collect_tuple().unwrap())
+        .map(|(status, constraint)|
+            (status.chars().collect_vec(), constraint.split(",").map(|c| c.parse().unwrap()).collect()))
+        .collect();
+    let sum: usize = parsed.iter()
+        .flat_map(|(status, constraints)| find_combinations(status, constraints, false))
+        .sum();
+    println!("total {sum}")
+}
+
+fn find_combinations(springs: &[char], constraints: &[usize], in_streak: bool) -> Option<usize> {
     match (springs, constraints) {
         ([], [0]) => { Some(1) },
         ([], []) => { Some(1) },
