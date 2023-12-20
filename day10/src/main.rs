@@ -1,16 +1,15 @@
 use core::{Node, Coord};
-use std::collections::{VecDeque, HashSet};
-use itertools::{Itertools, repeat_n};
+use std::collections::{HashSet};
+use itertools::{Itertools};
 use crate::core::Pipe;
 
 mod consts;
 mod consts_two;
-mod part_a;
 mod core;
 
 
 fn main() {
-    let parsed: Vec<Vec<Pipe>> = consts_two::INPUT.lines().enumerate()
+    let parsed: Vec<Vec<Pipe>> = consts::BIG_INPUT.lines().enumerate()
         .map(|(y, l)| 
             l.chars().enumerate()
             .map(|(x, c)|Pipe::new(c, (x, y))).collect())
@@ -22,19 +21,25 @@ fn main() {
     let mut pipe_loop: HashSet<&Coord> = vec![next.unwrap()].into_iter().collect();
     while let Some(coords) = next {
         let (x,y) = coords;
-        println!("next {:?}", next);
-        println!("connections {:?}", connected[*y][*x].connections);
         next = connected[*y][*x].connections.iter().find(|c| !pipe_loop.contains(*c));
         if let Some(l) = next {
             pipe_loop.insert(l);
         }
     }
 
-    println!("{pipe_loop:?}");
+    let mut num_inside = 0;
     for j in 0..connected.len() {
+        let mut inside = false;
         for i in 0..connected[0].len() {
-            print!("{}{}", connected[j][i].pipe.char, if pipe_loop.contains(&connected[j][i].coords) { '!' } else {' '})
+            if pipe_loop.contains(&connected[j][i].coords)  {
+                if let '|' | 'L' | 'J'  = connected[j][i].pipe.char {
+                    inside = !inside;
+                }
+            } else if inside {
+                num_inside += 1
+            }
         }
-        println!(" ");
     }
+
+    println!("num_inside {num_inside}");
 }
